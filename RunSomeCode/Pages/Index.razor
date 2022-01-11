@@ -1,0 +1,72 @@
+﻿@page "/"
+@inject IPistonService PistonService
+@using Piston
+@using Piston.Models
+
+
+
+<PageTitle>Run Some Code</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">This Page Runs Code!</MudText>
+
+
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12">
+        <MudTextField spellcheck="false" @bind-Value="@_inputCode" Disabled=@(_processing) Label="Code Input" Variant="Variant.Outlined" Lines=5 />
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12">
+        <MudButton Disabled="@_processing" OnClick="SubmitCode" Variant="Variant.Filled" Color="Color.Primary">
+            @if (_processing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Processing</MudText>
+            }
+            else
+            {
+                <MudText>Run Code</MudText>
+            }
+        </MudButton>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12">
+        <MudPaper Class="pa-2 mud-secondary-text" Outlined="true">
+            <samp style="white-space: pre-wrap">@(_output== null ? "output" : _output.Run.Output)</samp>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    private MudTheme _theme = new();
+
+    private string _inputCode = "System.Console.WriteLine(\"Hello\");";
+    private PistonOutput? _output = null;
+    private bool _processing = false;
+
+    //protected override async Task OnInitializedAsync()
+    //{
+
+    //}
+
+    private async void SubmitCode()
+    {
+        var defaultCode = new PistonInput()
+            {
+                Language = "csharp",
+                Version = "5.0.201",
+                Files = new PistonFile[]
+                        {
+                    new PistonFile()
+                    {
+                        Name = "default.cs",
+                        Content = _inputCode
+                    }
+                        }
+            };
+
+        _processing = true;
+        var result = await PistonService.RunCode(defaultCode);
+        _output = result;
+        _processing = false;
+        StateHasChanged();
+    }
+}
