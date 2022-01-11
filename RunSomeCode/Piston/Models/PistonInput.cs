@@ -8,6 +8,11 @@
     }
     public class PistonFile
     {
+        public PistonFile(string code)
+        {
+            Name = "default";
+            Content = code;
+        }
         public string Name { get; set; }
         public string Content { get; set; }
     }

@@ -6,6 +6,7 @@ namespace RunSomeCode.Piston
     public interface IPistonService
     {
         public Task<PistonOutput> RunCode(PistonInput pistonInput);
+        public Task<PistonRuntime[]> GetRuntimes();
     }
     public class PistonService : IPistonService
     {
@@ -13,6 +14,12 @@ namespace RunSomeCode.Piston
         public PistonService(HttpClient client)
         {
             _httpClient = client;
+        }
+
+        public async Task<PistonRuntime[]> GetRuntimes()
+        {
+            var result = await _httpClient.GetFromJsonAsync<PistonRuntime[]>("https://emkc.org/api/v2/piston/runtimes");
+            return result;
         }
 
         public async Task<PistonOutput> RunCode(PistonInput pistonInput)

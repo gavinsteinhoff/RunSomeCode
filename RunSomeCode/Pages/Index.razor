@@ -3,14 +3,22 @@
 @using Piston
 @using Piston.Models
 
-
-
 <PageTitle>Run Some Code</PageTitle>
 
 <MudText Typo="Typo.h3" GutterBottom="true">This Page Runs Code!</MudText>
 
-
 <MudGrid>
+    <MudItem xs="12" sm="6" md="4">
+        <MudSelect T="string" Value="_inputLanguage" Label="Language" AnchorOrigin="Origin.BottomCenter" Disabled=@(_processing) ValueChanged="LanguageChanged">
+            @foreach (var runtime in _runtimes)
+            {
+                <MudSelectItem Value="@(runtime.Language)" />
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudTextField @bind-Value="@_inputVersion" Disabled=@(_processing) Label="Version" Variant="Variant.Outlined" ReadOnly=true />
+    </MudItem>
     <MudItem xs="12" sm="12" md="12">
         <MudTextField spellcheck="false" @bind-Value="@_inputCode" Disabled=@(_processing) Label="Code Input" Variant="Variant.Outlined" Lines=5 />
     </MudItem>
@@ -38,29 +46,26 @@
 @code {
     private MudTheme _theme = new();
 
-    private string _inputCode = "System.Console.WriteLine(\"Hello\");";
+    private string _inputCode = "console.log('Hello World')";
+    private string _inputLanguage = "javascript";
+    private string _inputVersion = "";
     private PistonOutput? _output = null;
     private bool _processing = false;
+    private PistonRuntime[] _runtimes = new PistonRuntime[0];
 
-    //protected override async Task OnInitializedAsync()
-    //{
-
-    //}
+    protected override async Task OnInitializedAsync()
+    {
+        _runtimes = await PistonService.GetRuntimes();
+        _inputVersion = _runtimes.First(r => r.Language == _inputLanguage).Version;
+    }
 
     private async void SubmitCode()
     {
         var defaultCode = new PistonInput()
             {
-                Language = "csharp",
-                Version = "5.0.201",
-                Files = new PistonFile[]
-                        {
-                    new PistonFile()
-                    {
-                        Name = "default.cs",
-                        Content = _inputCode
-                    }
-                        }
+                Language = _inputLanguage,
+                Version = _inputVersion,
+                Files = new PistonFile[] { new PistonFile(_inputCode) }
             };
 
         _processing = true;
@@ -68,5 +73,11 @@
         _output = result;
         _processing = false;
         StateHasChanged();
+    }
+
+    private void LanguageChanged(string selectedLanguage)
+    {
+        _inputLanguage = selectedLanguage;
+        _inputVersion = _runtimes.First(r => r.Language == _inputLanguage).Version;
     }
 }
